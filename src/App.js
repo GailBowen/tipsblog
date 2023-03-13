@@ -1,9 +1,11 @@
-import logo from './logo.svg';
 import './App.css';
+import Counter from './features/counter/Counter';
 
 function App() {
   return (
-   <main><h1>hello wolf</h1></main>
+   <main>
+    <Counter/>
+   </main>
   );
 }
 

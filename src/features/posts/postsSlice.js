@@ -1,9 +1,9 @@
 import { createSlice, nanoid } from '@reduxjs/toolkit';
 
 const initialState = [
-    { id: '1', title: 'Do not eat lemon meringue', content: 'Lemon meringue not good for dress' },
-    { id: '2', title: 'Remember when slim', content: 'You could get this back again' },
-    { id: '3', title: 'Never say this is my last nom of the day', content: 'Just put off nomming as long as possible' },
+    { id: '1', title: 'Do not eat lemon meringue', content: 'Lemon meringue not good for dress', userId: '0' },
+    { id: '2', title: 'Remember when slim', content: 'You could get this back again', userId: '1' },
+    { id: '3', title: 'Never say this is my last nom of the day', content: 'Just put off nomming as long as possible', userId: '2' },
 ];
 
 const postsSlice = createSlice({
@@ -14,12 +14,13 @@ const postsSlice = createSlice({
             reducer(state, action) {
                 state.push(action.payload);
             },
-            prepare(title, content) {
+            prepare(title, content, userId) {
                 return {
                     payload: {
                         id: nanoid(),
                         title,
-                        content
+                        content,
+                        userId
                     }
                 }
             }           

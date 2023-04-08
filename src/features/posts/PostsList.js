@@ -1,38 +1,45 @@
-import { useSelector } from 'react-redux';
-import { selectAllPosts } from './postsSlice';
+import { useSelector, useDispatch} from 'react-redux';
+import { selectAllPosts, getPostsStatus, getPostsError, fetchPosts } from './postsSlice';
+import { useEffect } from 'react';
+import React from 'react';
+import PostsExcerpt from './PostsExcerpt';
 
-import PostAuthor  from './PostAuthor';
-import TimeAgo from './TimeAgo';
 
-import React from 'react'
-
-import ReactionButtons from './ReactionButtons';
 
 const PostsList = () => {
-    const posts = useSelector(selectAllPosts)
-   
-    console.log('PostsList -> posts', posts);
 
-    const orderedPosts = posts.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const dispatch = useDispatch();
 
-    const renderedPosts = orderedPosts.map(post => (
-        <article className="post-excerpt" key={post.id}>
-            <h3>{post.title}</h3>
-            <p className="post-content">{post.content.substring(0, 100)}</p>
-            <p className="postCredit">
-                <PostAuthor userId={post.userId} />
-            </p>
-            <p>
-                <TimeAgo timestamp={post.date} />
-            </p>
-            <ReactionButtons post={post} />
-        </article>
-    ))
+    const posts = useSelector(selectAllPosts);
+    const postStatus = useSelector(getPostsStatus);
+    const error = useSelector(getPostsError);
+
+    useEffect(() => {
+        if (postStatus === 'idle') {
+            dispatch(fetchPosts());
+        }
+    }, [postStatus, dispatch]);
+
+    console.log('Doc Martin posts', posts);
+
+    console.log('Doc Martin postStatus', postStatus);
+
+    let content;
+    if (postStatus === 'loading') {
+        content = <p>"Loading..."</p>;
+    } else if (postStatus === 'succeeded') {
+        const orderedPosts = posts.slice().sort((a, b) => b.date.localeCompare(a.date));
+        console.log('orderedPosts', orderedPosts);
+        
+        content = orderedPosts.map(post => <PostsExcerpt key={post.id} post={post} />);
+    } else if (postStatus === 'failed') {
+        content = <p>{error}</p>;
+    }
 
     return (
         <section>
             <h2>Posts</h2>
-            {renderedPosts}
+            {content}
         </section>
     )
 }

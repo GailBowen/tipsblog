@@ -1,37 +1,23 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
-
+import { createSlice, nanoid, createAsyncThunk } from '@reduxjs/toolkit';
 import { sub } from 'date-fns';
+import axios from 'axios';
 
-const initialState = [
-    { 
-        id: '1',
-        title:  'Do not eat lemon meringue', 
-        content: 'Lemon meringue not good for dress', 
-        userId: '0',
-        date: sub(new Date(), { minutes: 10 }).toISOString(),
-        reactions: {
-            thumbsUp:0,
-            wow: 0,
-            heart: 0,
-            rocket: 0,
-            coffee: 0
-        }
-    },
-    { 
-        id: '2', 
-        title: 'Never say this is my last nom of the day', 
-        content: 'Just put off nomming as long as possible', 
-        userId: '2',
-        date: sub(new Date(), { minutes: 5}).toISOString() ,
-        reactions: {
-            thumbsUp:0,
-            wow: 0,
-            heart: 0,
-            rocket: 0,
-            coffee: 0
-        }
-    }
-];
+const POSTS_URL = 'https://jsonplaceholder.typicode.com/posts';
+
+const initialState = {
+    posts: [],
+    status: 'idle', // idle, loading, succeeded, failed
+    error: null
+}
+
+export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
+     try {
+        const response = await axios.get(POSTS_URL);
+        return [ response.data ];   
+    } catch (err) {
+        return err.message;
+    }   
+});
 
 const postsSlice = createSlice({
     name: 'posts',
@@ -39,16 +25,17 @@ const postsSlice = createSlice({
     reducers: {
         postAdded: {
             reducer(state, action) {
-                state.push(action.payload);
+                console.log('action.payload in postAdded', action.payload);
+                state.posts.push(action.payload);
             },
             prepare(title, content, userId) {
                 return {
                     payload: {
                         id: nanoid(),
                         title,
-                        content,
+                        body: content,
                         date: new Date().toISOString(),
-                        userId,
+                        userId: Number(userId),
                         reactions: { thumbsUp: 0, wow: 0, heart: 0, rocket: 0, coffee: 0 },
                     }
                 }
@@ -56,17 +43,51 @@ const postsSlice = createSlice({
         },
         reactionAdded(state, action) {
             const { postId, reaction } = action.payload;
-            const existingPost = state.find(post => post.id === postId);
+            const existingPost = state.posts.find(post => post.id === postId);
             if (existingPost) {
                 existingPost.reactions[reaction]++;
             }
         }
+    },
+    extraReducers(builder) {
+        builder
+            .addCase(fetchPosts.pending, (state, action) => {             
+                state.status = 'loading';
+                console.log('loading...');
+            })
+            .addCase(fetchPosts.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                
+                let min = 1;
+
+                console.log('action.payload', action.payload);
+
+                const loadedPosts = action.payload[0].map(post => {
+                    post.date = sub(new Date() , { minutes: min++ }).toISOString();
+                    post.reactions = { thumbsUp: 0, wow: 0, heart: 0, rocket: 0, coffee: 0 };
+                    return post;
+                });
+
+                console.log('loadedPosts', loadedPosts);
+
+                state.posts = loadedPosts;
+
+                console.log('state.posts', state.posts);
+            })
+            .addCase(fetchPosts.rejected, (state, action) => {              
+                state.status = 'failed';
+                state.error = action.error.message;
+            })
     }
 });
 
 export const { postAdded, reactionAdded } = postsSlice.actions;
 
-export const selectAllPosts = state => state.posts;
+export const selectAllPosts = state => state.posts.posts;
+export const getPostsStatus = state => state.posts.status;
+export const getPostsError = state => state.posts.error;
+
+
 
 export default postsSlice.reducer;
 

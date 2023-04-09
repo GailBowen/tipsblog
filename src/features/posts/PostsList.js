@@ -20,16 +20,11 @@ const PostsList = () => {
         }
     }, [postStatus, dispatch]);
 
-    console.log('Doc Martin posts', posts);
-
-    console.log('Doc Martin postStatus', postStatus);
-
     let content;
     if (postStatus === 'loading') {
         content = <p>"Loading..."</p>;
     } else if (postStatus === 'succeeded') {
         const orderedPosts = posts.slice().sort((a, b) => b.date.localeCompare(a.date));
-        console.log('orderedPosts', orderedPosts);
         
         content = orderedPosts.map(post => <PostsExcerpt key={post.id} post={post} />);
     } else if (postStatus === 'failed') {

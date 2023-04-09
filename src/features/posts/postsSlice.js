@@ -25,7 +25,6 @@ const postsSlice = createSlice({
     reducers: {
         postAdded: {
             reducer(state, action) {
-                console.log('action.payload in postAdded', action.payload);
                 state.posts.push(action.payload);
             },
             prepare(title, content, userId) {
@@ -53,14 +52,11 @@ const postsSlice = createSlice({
         builder
             .addCase(fetchPosts.pending, (state, action) => {             
                 state.status = 'loading';
-                console.log('loading...');
             })
             .addCase(fetchPosts.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 
                 let min = 1;
-
-                console.log('action.payload', action.payload);
 
                 const loadedPosts = action.payload[0].map(post => {
                     post.date = sub(new Date() , { minutes: min++ }).toISOString();
@@ -68,11 +64,8 @@ const postsSlice = createSlice({
                     return post;
                 });
 
-                console.log('loadedPosts', loadedPosts);
-
                 state.posts = loadedPosts;
 
-                console.log('state.posts', state.posts);
             })
             .addCase(fetchPosts.rejected, (state, action) => {              
                 state.status = 'failed';
